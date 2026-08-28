@@ -1,0 +1,126 @@
+-- ==========================================
+-- [1단계] 변수 준비 및 파트 가져오기
+-- ==========================================
+local Players = game:GetService("Players")
+
+-- 탐색기에서 슬롯머신 부품들을 돋보기를 들고 찾아서 변수에 보관합니다.
+-- (뒤에 true를 붙이면 모델/그룹 상자 안에 숨어있는 부품까지 샅샅이 찾아냅니다.)
+local slot1 = workspace:FindFirstChild("Slot1", true)
+local slot2 = workspace:FindFirstChild("Slot2", true)
+local slot3 = workspace:FindFirstChild("Slot3", true)
+local buttonPart = workspace:FindFirstChild("ButtonPart", true)
+local coinSpawner = workspace:FindFirstChild("CoinSpawner", true)
+
+-- 프로그램이 튕기거나 오류가 나지 않게 막아주는 예외 처리
+if not buttonPart then return end
+local prompt = buttonPart:FindFirstChildOfClass("ProximityPrompt")
+if not prompt then return end
+
+-- 슬롯머신 화면에 빙글빙글 돌아갈 무지개 색상 리스트
+local slotColors = {
+	BrickColor.new("Bright red"),     -- 빨강
+	BrickColor.new("Bright blue"),    -- 파랑
+	BrickColor.new("Bright yellow"),  -- 노랑
+	BrickColor.new("Bright green"),   -- 초록
+	BrickColor.new("Bright violet"),  -- 보라
+	BrickColor.new("Bright orange")   -- 주황
+}
+
+-- 중복 실행 방지 자물쇠 (이미 회전 중이면 연출이 끝날 때까지 또 누르지 못하게 막음)
+local isSpinning = false
+
+
+-- ==========================================
+-- [2단계] 버튼 클릭 시 게임 시작 (이벤트)
+-- ==========================================
+prompt.Triggered:Connect(function(player)
+	
+	-- 이미 슬롯이 돌아가는 중이라면 아래 코드를 실행하지 않고 중단합니다.
+	if isSpinning then return end
+
+	-- 버튼을 누른 플레이어의 지갑(leaderstats)과 돈(Money)을 가져옵니다.
+	local stats = player:FindFirstChild("leaderstats")
+	local money = stats and stats:FindFirstChild("Money")
+
+	-- [조건문 1] 지갑이 존재하고, 가지고 있는 돈이 100원 이상인가요?
+	if money and money.Value >= 100 then
+		
+		-- 연출이 시작되면 다른 사람이 누르지 못하게 자물쇠를 채웁니다.
+		isSpinning = true
+		
+		-- 배팅금 100원을 차감합니다.
+		money.Value = money.Value - 100
+
+		-- ----------------------------------------------------
+		-- [3단계] 반복문(for)으로 긴장감 넘치는 릴 회전 연출!
+		-- ----------------------------------------------------
+		-- 1번부터 25번까지 총 25번 빠르게 반복하며 색상을 바꿉니다.
+		for i = 1, 25 do
+			-- math.random으로 무작위 색상 번호(1~6)를 3개 릴에 각각 다르게 뽑습니다.
+			local r1 = math.random(1, #slotColors)
+			local r2 = math.random(1, #slotColors)
+			local r3 = math.random(1, #slotColors)
+
+			-- 슬롯 3개의 네온 블록 색상을 무작위로 변경합니다.
+			if slot1 then slot1.BrickColor = slotColors[r1] end
+			if slot2 then slot2.BrickColor = slotColors[r2] end
+			if slot3 then slot3.BrickColor = slotColors[r3] end
+
+			-- 뒤로 갈수록 (i가 커질수록) 멈추는 시간이 늘어나면서 쫄깃해집니다!
+			task.wait(0.04 + (i * 0.006))
+		end
+
+		-- 회전 연출이 완료되고 최종 멈춘 3개 슬롯의 색상을 변수에 담습니다.
+		local c1 = slot1 and slot1.BrickColor
+		local c2 = slot2 and slot2.BrickColor
+		local c3 = slot3 and slot3.BrickColor
+
+		-- ----------------------------------------------------
+		-- [4단계] 조건문(if-elseif-else)으로 결과 판정!
+		-- ----------------------------------------------------
+		
+		-- 💥 잭팟: 3개가 모두 같은 색일 때 (c1과 c2가 같고, c2와 c3도 같음)
+		if (c1 == c2) and (c2 == c3) then
+			
+			-- 잭팟 당첨금 5000원 지급!
+			money.Value = money.Value + 5000
+
+			-- 폭발 이펙트 생성
+			local exp = Instance.new("Explosion")
+			
+			----------------------------------------------------------------------
+			-- 💡 [핵심 해설] 폭발 위치 잡기 (3중 안전장치 / or 연산자 활용)
+			-- 1순위: CoinSpawner 파트가 있으면 그 파트의 위치 사용
+			-- 2순위: 실수로 CoinSpawner를 안 만들었다면? -> 가운데 Slot2 파트 위치 사용
+			-- 3순위: 슬롯 머신 파트가 다 지워졌다면? -> 공중 좌표 Vector3.new(0,10,0) 사용
+			-- ※ and/or를 활용해 파트가 삭제되었어도 에러 없이 안전하게 터지게 해줍니다!
+			----------------------------------------------------------------------
+			exp.Position = coinSpawner and coinSpawner.Position or (slot2 and slot2.Position) or Vector3.new(0,10,0)
+			
+			exp.BlastPressure = 500000 -- 파편을 사방으로 날려버리는 강력한 물리 충격파
+			exp.DestroyJointRadiusPercent = 1 -- 파편들을 묶고 있던 용접(Weld)을 박살냄
+			exp.Parent = workspace
+			
+			print("🎉 대박! 3개 일치 잭팟 터짐 (+5000원)")
+
+		-- ✨ 소박: 3개 중 2개만 같은 색일 때
+		elseif (c1 == c2) or (c2 == c3) or (c1 == c3) then
+			
+			-- 소박 당첨금 300원 지급!
+			money.Value = money.Value + 300
+			print("✨ 소박 당첨! (+300원)")
+
+		-- 💀 꽝: 3개 색이 모두 다를 때
+		else
+			print("💀 꽝입니다! 아쉽네요.")
+		end
+
+		-- 연출 종료 후 0.5초 뒤 자물쇠를 풀어 다시 버튼을 누를 수 있게 만듭니다.
+		task.wait(0.5)
+		isSpinning = false
+		
+	else
+		-- 소지금이 100원 미만일 때 출력
+		print("돈이 부족합니다! 100원 이상이 필요합니다.")
+	end
+end)
