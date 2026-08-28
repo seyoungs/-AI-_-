@@ -1,0 +1,14 @@
+local Players = game:GetService("Players")
+	
+Players.PlayerAdded:Connect(function(player)
+	-- ★ 로블록스 규칙: 반드시 소문자 "leaderstats"여야 우측 상단 UI가 켜집니다! ★
+	local leaderstats = Instance.new("Folder")
+	leaderstats.Name = "leaderstats"
+	leaderstats.Parent = player
+
+	-- 소지원 데이터 (Money)
+	local money = Instance.new("IntValue")
+	money.Name = "Money"
+	money.Value = 1000 -- 기본 자금 1000원
+	money.Parent = leaderstats
+end)
