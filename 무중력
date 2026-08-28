@@ -1,0 +1,81 @@
+-- 내 도구(아이템)를 보관해요
+local tool = script.Parent
+-- 키보드나 마우스 입력을 감지하는 서비스를 불러와요
+local UIS = game:GetService("UserInputService")
+
+-- 공중에 뜨게 만드는 힘과 붙일 위치, 스페이스바 상태를 저장할 변수예요
+local force
+local attachment
+local spaceDown = false
+
+-- 도구를 손에 쥐었을 때 실행돼요
+tool.Equipped:Connect(function()
+	-- 캐릭터의 정보를 가져와요
+	local character = tool.Parent
+	-- 캐릭터의 중심(몸통) 부위를 찾아요
+	local root = character:FindFirstChild("HumanoidRootPart")
+
+	-- 중심 부위가 없으면 그냥 나가요
+	if not root then return end
+
+	-- 힘을 줄 기준점(Attachment)을 만들어서 캐릭터 중심에 붙여요
+	attachment = Instance.new("Attachment")
+	attachment.Parent = root
+
+	-- 캐릭터를 밀어 올릴 물리 힘(VectorForce)을 만들어요
+	force = Instance.new("VectorForce")
+	force.Attachment0 = attachment
+	force.RelativeTo = Enum.ActuatorRelativeTo.World
+	force.Parent = root
+
+	-- 키보드 버튼을 눌렀을 때 감지해요
+	UIS.InputBegan:Connect(function(input)
+		-- 누른 키가 '스페이스바'라면 스페이스바를 누른 상태(true)로 바꿔요
+		if input.KeyCode == Enum.KeyCode.Space then
+			spaceDown = true
+		end
+	end)
+
+	-- 키보드 버튼에서 손을 뗐을 때 감지해요
+	UIS.InputEnded:Connect(function(input)
+		-- 뗀 키가 '스페이스바'라면 누르지 않은 상태(false)로 바꿔요
+		if input.KeyCode == Enum.KeyCode.Space then
+			spaceDown = false
+		end
+	end)
+
+	-- 힘이 계속 남아있는 동안 계속 반복해요
+	while force and force.Parent do
+		-- 캐릭터가 땅으로 떨어지려는 무게(중력)를 계산해요
+		local weight = root.AssemblyMass * workspace.Gravity
+
+		if spaceDown then
+			-- 스페이스바를 누르면 무게보다 강한 힘을 주어 위로 슝 올라가요!
+			force.Force = Vector3.new(0, weight * 1.5, 0)
+		else
+			-- 스페이스바를 놓으면 무게보다 약간 약한 힘을 주어 천천히 내려와요
+			force.Force = Vector3.new(0, weight * 0.8, 0)
+		end
+
+		-- 게임이 끊기지 않게 아주 잠시 기다려요
+		task.wait()
+	end
+end)
+
+-- 도구를 손에서 내려놓았을 때 실행돼요
+tool.Unequipped:Connect(function()
+	-- 스페이스바 누름 상태를 꺼요
+	spaceDown = false
+
+	-- 만들었던 힘(force)을 지워요
+	if force then
+		force:Destroy()
+		force = nil
+	end
+
+	-- 만들었던 기준점(attachment)을 지워요
+	if attachment then
+		attachment:Destroy()
+		attachment = nil
+	end
+end)
