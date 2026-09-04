@@ -8,21 +8,24 @@ task.spawn(function()
 		for i = 8, 1, -1 do
 			if isTriggered then break end -- 경보 터지면 스캔 연출 중단
 			laser.Transparency = i / 10
-			task.wait(0.05) -- [★ 튜닝 포인트 1] 깜빡이는 속도 (낮을수록 빠름)
+			task.wait(0.05)
 		end
 		-- 어두워지기 (투명도 0.1 -> 0.8)
 		for i = 1, 8, 1 do
 			if isTriggered then break end
 			laser.Transparency = i / 10
-			task.wait(0.05) -- [★ 튜닝 포인트 1] 깜빡이는 속도
+			task.wait(0.05)
 		end
 	end
 end)
 
 -- [2] if 조건문: 플레이어가 닿았는지 판별 및 물리 효과 적용
 laser.Touched:Connect(function(hit)
-	local character = hit.Parent
-	local humanoid = character:FindFirstChild("Humanoid")
+	-- [핵심 수정] 액세서리/모자가 닿아도 최상위 캐릭터 Model을 탐색
+	local character = hit:FindFirstAncestorOfClass("Model")
+	if not character then return end
+
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	local rootPart = character:FindFirstChild("HumanoidRootPart")
 
 	-- 침입자 판별 (사람이 맞고, 아직 경보가 터지지 않은 상태인가?)
@@ -33,17 +36,27 @@ laser.Touched:Connect(function(hit)
 		laser.Transparency = 0
 		laser.BrickColor = BrickColor.new("Really red")
 
-		-- 1) 폭발 물리 효과 (시각/청각적 타격감)
+		-- 1) 폭발 물리 효과
 		local exp = Instance.new("Explosion")
 		exp.Position = laser.Position
 		exp.BlastPressure = 0 -- 직접 데미지 대신 물리 튕겨내기 활용
 		exp.Parent = workspace
 
-		-- 2) 강제 튕겨내기 (AssemblyLinearVelocity)
-		-- [★ 튜닝 포인트 2] (X축, Y축:위로, Z축:뒤로) 튕겨나가는 힘 수치
-		rootPart.AssemblyLinearVelocity = Vector3.new(0, 150, -100) 
+		-- 2) 강제 튕겨내기 (네트워크 소유권 강제 및 Velocity 적용)
+		-- 플레이어의 네트워크 소유권을 서버로 일시 전환하여 즉각적인 물리 반응 보장
+		rootPart:SetNetworkOwner(nil)
+		
+		-- 순간 속도 적용 (Vector3 힘 조절)
+		rootPart.AssemblyLinearVelocity = Vector3.new(0, 150, -100)
 
-		task.wait(2) -- [★ 튜닝 포인트 3] 경보 리셋까지 걸리는 시간
+		task.wait(0.2)
+		-- 다시 플레이어 본인에게 네트워크 소유권 환원
+		local player = game.Players:GetPlayerFromCharacter(character)
+		if player then
+			rootPart:SetNetworkOwner(player)
+		end
+
+		task.wait(1.8) -- [★ 튜닝 포인트 3] 경보 리셋까지 걸리는 시간 (총 2초)
 		isTriggered = false
 	end
 end)
