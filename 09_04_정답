@@ -1,0 +1,49 @@
+2번 :
+
+local part = script.Parent
+local clickDetector = part:WaitForChild("ClickDetector")
+
+local count = 0
+
+clickDetector.MouseClick:Connect(function(player)
+	count = count + 1
+	
+	-- 클릭할 때마다 크기를 2배씩 확대
+	part.Size = part.Size + Vector3.new(2, 2, 2)
+	part.Position = part.Position + Vector3.new(0, 1, 0) -- 땅에 묻히지 않게 위로 올려줌
+	
+	-- 5번 클릭하면 파트가 터지듯 사라짐
+	if count >= 5 then
+		part.Transparency = 1
+		part.CanCollide = false
+		clickDetector.MaxActivationDistance = 0 -- 클릭 불가
+	end
+end)
+
+3번 : 
+
+local lift = script.Parent
+local prompt = lift:WaitForChild("ProximityPrompt")
+
+local isMoving = false
+
+prompt.Triggered:Connect(function(player)
+	if isMoving then return end
+	isMoving = true
+	
+	-- 발판을 위로 20칸 이동
+	for i = 1, 20 do
+		lift.Position = lift.Position + Vector3.new(0, 1, 0)
+		task.wait(0.05)
+	end
+	
+	task.wait(2) -- 정상에서 2초 대기
+	
+	-- 다시 아래로 20칸 이동
+	for i = 1, 20 do
+		lift.Position = lift.Position - Vector3.new(0, 1, 0)
+		task.wait(0.05)
+	end
+	
+	isMoving = false
+end)
