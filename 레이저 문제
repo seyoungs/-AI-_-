@@ -1,0 +1,72 @@
+local laser = script.Parent
+local isTriggered = false -- 경보 중복 실행 방지 플래그
+
+-- =========================================================
+-- [1단계] for 반복문: 레이저 스캔 연출 (스텔스 복습)
+-- =========================================================
+task.spawn(function()
+	while true do
+		-----------------------------------------------------------------
+		-- ✏️ [빈칸 1] 밝아지기: 투명도를 8부터 1까지 1씩 줄여가는(-1) for문!
+		-----------------------------------------------------------------
+		for i = 8, 1, ________ do
+			if isTriggered then break end
+			laser.Transparency = i / 10
+			task.wait(0.05) -- [스캔 속도 튜닝 포인트]
+		end
+		
+		-----------------------------------------------------------------
+		-- ✏️ [빈칸 2] 어두워지기: 투명도를 1부터 8까지 1씩 늘려가는(+1) for문!
+		-----------------------------------------------------------------
+		for i = 1, 8, ________ do
+			if isTriggered then break end
+			laser.Transparency = i / 10
+			task.wait(0.05)
+		end
+	end
+end)
+
+
+-- =========================================================
+-- [2단계] if 조건문: 침입자 판별 및 물리 튕겨내기
+-- =========================================================
+laser.Touched:Connect(function(hit)
+	local character = hit.Parent
+	
+	-----------------------------------------------------------------
+	-- ✏️ [빈칸 3] 닿은 대상의 부모(character) 안에서
+	-- 인간('Humanoid')과 몸의 중심점('HumanoidRootPart')을 찾아 변수에 담아보세요!
+	-----------------------------------------------------------------
+	local humanoid = character:FindFirstChild("___________")
+	local rootPart = character:FindFirstChild("___________")
+
+	-----------------------------------------------------------------
+	-- ✏️ [빈칸 4] 침입자 판별 조건문!
+	-- 인간(humanoid)이 있고(and) 중심점(rootPart)이 있고(and) 경보가 안 터졌다면(not isTriggered)!
+	-----------------------------------------------------------------
+	if humanoid and ________ and not ________ then
+		isTriggered = true
+
+		-- 시각 효과 (빨간색 고정)
+		laser.Transparency = 0
+		laser.BrickColor = BrickColor.new("Really red")
+
+		-- 1) 폭발 물리 효과 (시각 연출용)
+		local exp = Instance.new("Explosion")
+		exp.Position = laser.Position
+		exp.BlastPressure = 0 -- 캐릭터 사망 방지
+		exp.Parent = workspace
+
+		-- 2) 강제 튕겨내기
+		rootPart.CFrame = rootPart.CFrame + Vector3.new(0, 1, 0)
+
+		-----------------------------------------------------------------
+		-- ✏️ [빈칸 5] 침입자를 튕겨낼 물리 속도(Vector3)를 부여해보세요!
+		-- (X축:0, Y축:위로 300, Z축:뒤로 -200)
+		-----------------------------------------------------------------
+		rootPart.AssemblyLinearVelocity = Vector3.new(0, ______, ______)
+
+		task.wait(2)
+		isTriggered = false -- 2초 후 경보 리셋
+	end
+end)
