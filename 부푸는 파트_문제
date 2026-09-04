@@ -1,0 +1,25 @@
+local part = script.Parent
+local clickDetector = part:WaitForChild("ClickDetector")
+
+local count = 0
+
+-- 마우스 클릭 이벤트를 연결합니다.
+clickDetector.________________:Connect(function(player)
+	count = count + 1
+	
+	-- 클릭할 때마다 파트의 크기(Size)를 (2, 2, 2)만큼 크게 만듭니다.
+	part.Size = part.Size + ________________
+	
+	-- 파트가 땅에 묻히지 않게 위(Y축)로 1칸 올립니다.
+	part.Position = part.Position + Vector3.new(0, 1, 0)
+	
+	-- 5번 이상 클릭했는지 확인합니다.
+	if count >= 5 then
+		-- 파트를 투명하게 만들고 충돌을 끕니다.
+		part.Transparency = 1
+		part.________________ = false
+		
+		-- 더 이상 클릭하지 못하게 만듭니다.
+		clickDetector.________________ = 0
+	end
+end)
