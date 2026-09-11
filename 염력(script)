@@ -1,0 +1,17 @@
+-- 내가 손에 쥐고 있는 지팡이(Tool)예요
+local tool = script.Parent
+
+-- 서버로 주문을 전달할 '신호기(PullEvent)'를 가져와요
+local pullEvent = tool:WaitForChild("PullEvent")
+
+-- 내 마우스 화살표 정보를 가져와요
+local mouse = game.Players.LocalPlayer:GetMouse()
+
+-- 지팡이를 들고 화면을 '딸깍!' 클릭했을 때
+tool.Activated:Connect(function()
+	-- 마우스가 가리키는 곳이 있고, 그 땅(Position)을 잘 찍었다면?
+	if mouse and mouse.Hit then
+		-- 서버 스크립트한테 "나 지금 여기 찍었으니까 물건들 끌어당겨줘!" 하고 신호를 보내요!
+		pullEvent.FireServer(pullEvent, mouse.Hit.Position)
+	end
+end)
