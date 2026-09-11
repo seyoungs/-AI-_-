@@ -1,0 +1,24 @@
+-- 지팡이(Tool) 아이템을 찾아요
+local tool = script.Parent
+
+-- 클라이언트와 서버를 연결해 주는 '주문 신호기(PullEvent)'를 기다려서 가져와요
+local pullEvent = tool:WaitForChild("PullEvent")
+
+-- 플레이어가 지팡이를 클릭해서 신호를 보내면 실행돼요!
+pullEvent.OnServerEvent:Connect(function(player, targetPosition)
+
+	-- 내가 클릭한 위치를 기준으로 동그란 보호막(반경 30)을 그려요.
+	-- 그리고 그 안에 들어있는 모든 블록(파트)을 다 찾아내서 하나씩 검사해요!
+	for _, part in ipairs(workspace:GetPartBoundsInRadius(targetPosition, 30)) do
+
+		-- [조건 검사] 땅에 딱 붙어있는(Anchored) 블록이 아니고,
+		-- 내 캐릭터 몸통이 아닐 때만 마법을 걸어요! (나까지 끌려오면 안 되니까요!)
+		if not part.Anchored and not part:IsDescendantOf(player.Character) then
+
+			-- (클릭한 곳 - 블록 위치) = 블록이 날아갈 방향!
+			-- AssemblyLinearVelocity는 블록에게 속도(힘)를 딱 실어주는 명령어예요.
+			-- 숫자가 50이라서 슝~! 하고 내가 클릭한 곳으로 날아가게 만들어 줘요!
+			part.AssemblyLinearVelocity = (targetPosition - part.Position).Unit * 50
+		end
+	end
+end)
