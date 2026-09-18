@@ -1,0 +1,17 @@
+-- 이 스크립트가 들어있는 도구(지팡이)를 변수에 저장해요
+local tool =______._____
+
+-- 서버와 통신하기 위해 만든 'PullEvent' 통로를 가져와요
+local pullEvent = tool:WaitForChild(_____)
+
+-- 플레이어의 마우스 정보를 가져와요
+local mouse = game.Players.LocalPlayer:GetMouse()
+
+-- 도구를 마우스로 클릭했을 때 실행돼요
+tool.Activated:Connect(function()
+	-- 마우스가 허공이 아니라 어떤 물체나 땅을 제대로 겨누고 있다면?
+	if mouse and mouse._____ then
+		-- 마우스가 클릭한 지점의 위치 값을 서버로 보내줘요
+		pullEvent:FireServer(mouse.Hit._____)
+	end
+end)
