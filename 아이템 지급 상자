@@ -1,0 +1,7 @@
+local prompt = script.Parent:WaitForChild("ProximityPrompt")
+
+prompt.Triggered:Connect(function(player)
+	-- ReplicatedStorage나 상자 안에 넣어둔 Tool을 플레이어 가방으로 복사
+	local tool = game.ServerStorage.Tool1:Clone()
+	tool.Parent = player.Backpack
+end)	
