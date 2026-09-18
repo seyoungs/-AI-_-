@@ -4,11 +4,11 @@ local price = 100 -- 아이템 구매에 필요한 가격
 prompt.Triggered:Connect(function(player)
 	-- 플레이어의 leaderstats와 Money 데이터를 안전하게 가져옴
 	local leaderstats = player:FindFirstChild("leaderstats")
-	local cash = leaderstats:FindFirstChild("Money")
+	local money = leaderstats:FindFirstChild("Money")
 	
 	-- 플레이어가 가진 돈이 가격보다 많거나 같을 때만 실행
-	if cash.Value >= price then
-		cash.Value = cash.Value - price -- 보유한 돈에서 가격만큼 차감
+	if money.Value >= price then
+		money.Value = money.Value - price -- 보유한 돈에서 가격만큼 차감
 		
 		-- ServerStorage에 있는 Tool1을 복사해서 플레이어 가방(Backpack)으로 지급
 		local tool = game.ServerStorage.Tool1:Clone()
