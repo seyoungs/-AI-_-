@@ -1,24 +1,17 @@
--- 지팡이(Tool) 아이템을 찾아요
+-- 내가 손에 쥐고 있는 지팡이(Tool)예요
 local tool = script.Parent
 
--- 클라이언트와 서버를 연결해 주는 '주문 신호기(PullEvent)'를 기다려서 가져와요
+-- 서버로 주문을 전달할 '신호기(PullEvent)'를 가져와요
 local pullEvent = tool:WaitForChild("PullEvent")
 
--- 플레이어가 지팡이를 클릭해서 신호를 보내면 실행돼요!
-pullEvent.OnServerEvent:Connect(function(player, targetPosition)
+-- 내 마우스 화살표 정보를 가져와요
+local mouse = game.Players.LocalPlayer:GetMouse()
 
-	-- 내가 클릭한 위치를 기준으로 동그란 보호막(반경 30)을 그려요.
-	-- 그리고 그 안에 들어있는 모든 블록(파트)을 다 찾아내서 하나씩 검사해요!
-	for _, part in ipairs(workspace:GetPartBoundsInRadius(targetPosition, 30)) do
-
-		-- [조건 검사] 땅에 딱 붙어있는(Anchored) 블록이 아니고,
-		-- 내 캐릭터 몸통이 아닐 때만 마법을 걸어요! (나까지 끌려오면 안 되니까요!)
-		if not part.Anchored and not part:IsDescendantOf(player.Character) then
-
-			-- (클릭한 곳 - 블록 위치) = 블록이 날아갈 방향!
-			-- AssemblyLinearVelocity는 블록에게 속도(힘)를 딱 실어주는 명령어예요.
-			-- 숫자가 50이라서 슝~! 하고 내가 클릭한 곳으로 날아가게 만들어 줘요!
-			part.AssemblyLinearVelocity = (targetPosition - part.Position).Unit * 50
-		end
+-- 지팡이를 들고 화면을 '딸깍!' 클릭했을 때
+tool.Activated:Connect(function()
+	-- 마우스가 가리키는 곳이 있고, 그 땅(Position)을 잘 찍었다면?
+	if mouse and mouse.Hit then
+		-- 서버 스크립트한테 위치 정보만 담아서 신호를 보내요! (콜론 ':' 사용!)
+		pullEvent:FireServer(mouse.Hit.Position)
 	end
 end)
